@@ -1,0 +1,129 @@
+{
+ "size": 994.8600000000376,
+ "centre": [
+  0.0,
+  0.0
+ ],
+ "meshes": [
+  {
+   "file": "meshes/ground_0.obj",
+   "texture": "textures/ground.png",
+   "kind": "ground",
+   "collision": true,
+   "faces": 18432
+  },
+  {
+   "file": "meshes/walls_stucco_pastel_0.obj",
+   "texture": "textures/facade_stucco_pastel.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 1062
+  },
+  {
+   "file": "meshes/walls_house_siding_0.obj",
+   "texture": "textures/facade_house_siding.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 886
+  },
+  {
+   "file": "meshes/walls_stucco_cream_0.obj",
+   "texture": "textures/facade_stucco_cream.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 1594
+  },
+  {
+   "file": "meshes/walls_brick_red_0.obj",
+   "texture": "textures/facade_brick_red.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 1380
+  },
+  {
+   "file": "meshes/walls_office_concrete_0.obj",
+   "texture": "textures/facade_office_concrete.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 534
+  },
+  {
+   "file": "meshes/walls_industrial_metal_0.obj",
+   "texture": "textures/facade_industrial_metal.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 48
+  },
+  {
+   "file": "meshes/walls_brick_brown_0.obj",
+   "texture": "textures/facade_brick_brown.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 40
+  },
+  {
+   "file": "meshes/walls_glass_blue_0.obj",
+   "texture": "textures/facade_glass_blue.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 200
+  },
+  {
+   "file": "meshes/walls_glass_dark_0.obj",
+   "texture": "textures/facade_glass_dark.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 114
+  },
+  {
+   "file": "meshes/roofs_0.obj",
+   "texture": "textures/roofs.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 3011
+  },
+  {
+   "file": "meshes/trees_0.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 30004
+  },
+  {
+   "file": "meshes/trees_1.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 30012
+  },
+  {
+   "file": "meshes/trees_2.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 30030
+  },
+  {
+   "file": "meshes/trees_3.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 8640
+  }
+ ],
+ "attribution": [
+  "Map data (c) OpenStreetMap contributors, ODbL 1.0"
+ ],
+ "counts": {
+  "roads": 167,
+  "blocks": 97,
+  "buildings": 294,
+  "trees": 2555,
+  "buildings_by_zone": {
+   "residential": 236,
+   "midrise": 39,
+   "industrial": 13,
+   "downtown": 6
+  }
+ }
+}

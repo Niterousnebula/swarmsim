@@ -1,0 +1,108 @@
+{
+ "size": 1000.0,
+ "centre": [
+  0.0,
+  0.0
+ ],
+ "meshes": [
+  {
+   "file": "meshes/ground_0.obj",
+   "texture": "textures/ground.png",
+   "kind": "ground",
+   "collision": true,
+   "faces": 18432
+  },
+  {
+   "file": "meshes/walls_office_concrete_0.obj",
+   "texture": "textures/facade_office_concrete.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 426
+  },
+  {
+   "file": "meshes/walls_stucco_pastel_0.obj",
+   "texture": "textures/facade_stucco_pastel.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 1260
+  },
+  {
+   "file": "meshes/walls_stucco_cream_0.obj",
+   "texture": "textures/facade_stucco_cream.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 854
+  },
+  {
+   "file": "meshes/walls_brick_red_0.obj",
+   "texture": "textures/facade_brick_red.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 920
+  },
+  {
+   "file": "meshes/walls_house_siding_0.obj",
+   "texture": "textures/facade_house_siding.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 396
+  },
+  {
+   "file": "meshes/walls_brick_brown_0.obj",
+   "texture": "textures/facade_brick_brown.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 974
+  },
+  {
+   "file": "meshes/walls_office_white_0.obj",
+   "texture": "textures/facade_office_white.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 16
+  },
+  {
+   "file": "meshes/walls_glass_dark_0.obj",
+   "texture": "textures/facade_glass_dark.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 16
+  },
+  {
+   "file": "meshes/roofs_0.obj",
+   "texture": "textures/roofs.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 2065
+  },
+  {
+   "file": "meshes/trees_0.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 30036
+  },
+  {
+   "file": "meshes/trees_1.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 29376
+  }
+ ],
+ "attribution": [
+  "Map data (c) OpenStreetMap contributors, ODbL 1.0"
+ ],
+ "counts": {
+  "roads": 294,
+  "blocks": 130,
+  "buildings": 244,
+  "trees": 1514,
+  "buildings_by_zone": {
+   "midrise": 171,
+   "residential": 68,
+   "industrial": 1,
+   "downtown": 4
+  }
+ }
+}
