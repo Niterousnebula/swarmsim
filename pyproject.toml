@@ -1,0 +1,20 @@
+[project]
+name = "swarmsim"
+version = "0.1.0"
+description = "Modular drone-swarm simulation: procedural city, vehicle models, PyBullet physics, RL plugin"
+requires-python = ">=3.10"
+dependencies = ["numpy", "shapely>=2.1", "pillow", "pyyaml", "requests", "pybullet", "gymnasium",
+                "pettingzoo", "stable-baselines3"]
+
+[project.optional-dependencies]
+onnx = ["onnx", "onnxscript", "onnxruntime"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["swarmsim*"]
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"      # no .pytest_cache folder in the project

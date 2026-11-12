@@ -1,0 +1,88 @@
+# swarmsim experiment file. Every key is optional: anything left out keeps its
+# default. Full lists of hyperparameters:
+#   terrain -> swarmsim/terrain/params.py     models  -> swarmsim/models/specs.py
+#   physics -> swarmsim/physics/config.py     rl      -> swarmsim/rl/config.py
+
+terrain:
+  seed: 7
+  size_m: 800                  # side of the square map (m)
+  floor_height_m: 3.2
+  roads:
+    pattern: grid              # grid | organic | radial
+    block_size_m: 95
+    block_jitter: 0.18
+    rotation_deg: 12
+    arterial_every: 3
+    arterial_width_m: 18
+    street_width_m: 9
+    removal_prob: 0.10         # missing minor streets -> bigger, irregular blocks
+    diagonal_avenues: 1
+  zoning:
+    downtown_radius_frac: 0.26
+    midrise_radius_frac: 0.50
+    park_fraction: 0.08
+    industrial_fraction: 0.12
+  zones:                       # per land-use zone: downtown | midrise | residential | industrial
+    downtown: {height_median_m: 52, height_max_m: 170, tower_prob: 0.45}
+    residential: {height_median_m: 6.5, roof: mixed, yard_tree_prob: 0.55}
+  trees: {enabled: true, street_spacing_m: 16, park_density_per_ha: 85}
+  relief: {amplitude_m: 7, wavelength_m: 380}
+  water: {river: true, width_m: 30}
+  textures: {ground_px: 2048, facade_px: 256, window_lit_fraction: 0.18}
+  osm:
+    mode: "off"                # off | profile | roads | full   (anything but off needs internet or json_path)
+    bbox: [28.6260, 77.2120, 28.6360, 77.2240]   # south, west, north, east
+  satellite:
+    enabled: false             # colour palette + tree density from open satellite imagery
+    zoom: 14
+
+models:
+  assets_dir: assets/models
+  quad: {mass: 1.0, thrust_to_weight: 2.2, max_speed: 10.0, max_climb: 4.0}
+  fixedwing: {mass: 3.0, cruise_speed: 18.0, min_speed: 12.0, max_speed: 28.0, max_bank_deg: 45.0}
+  defence:
+    detection_range: 160.0     # m, needs line of sight
+    range_m: 120.0             # m, engagement range
+    fire_rate_hz: 3.0          # projectiles per second
+    projectile_speed: 110.0    # m/s
+    hit_radius: 0.7            # m
+    dispersion_deg: 1.2
+    slew_rate_deg: 70.0
+    reaction_time: 0.6
+    ammo: 400
+
+physics:
+  gravity: 9.81
+  air_density: 1.225
+  physics_hz: 120
+  drone_collisions: true
+  wind:
+    mean_speed: 3.0            # m/s at ref_height
+    direction_deg: 30.0        # blowing towards (0 = east, 90 = north)
+    shear_exponent: 0.25       # faster with height
+    gust_intensity: 1.0        # m/s turbulence
+    gust_time_scale: 4.0
+    building_shelter: 0.6      # calmer behind buildings
+
+rl:
+  n_quads: 6
+  n_fixedwing: 0
+  n_defence: 1
+  task: navigate               # navigate | coverage
+  policy_hz: 10
+  max_episode_s: 60
+  action_mode: discrete        # discrete | continuous
+  discrete_actions: [hover, forward, back, left, right, up, down, yaw_left, yaw_right]
+  move_speed: 6.0              # m/s for forward/back/left/right
+  climb_speed: 2.5             # m/s for up/down
+  fw_altitude: [3, 8]          # fixed-wing start/goal height above the tallest roof on the map (m)
+  fw_mode: search              # search = circle the map, fly to the target once seen | policy = flown by the model
+  fw_detect_range: 60          # m: how far a searching plane sees a target
+  yaw_rate: 0.9                # rad/s for yaw_left/yaw_right
+  n_rays: 12
+  ray_range: 40.0
+  k_neighbors: 3
+  train:
+    total_timesteps: 1000000
+    n_worlds: 2
+    run_dir: runs/default

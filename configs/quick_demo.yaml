@@ -1,0 +1,22 @@
+# Small, easy scenario for a first training run on a laptop CPU.
+# Low-rise suburb, short trips, one defence platform.
+terrain:
+  seed: 11
+  size_m: 300
+  water: {river: false}
+  zoning: {downtown_radius_frac: 0.0, midrise_radius_frac: 0.25}
+  relief: {amplitude_m: 3.0}
+
+rl:
+  n_quads: 8
+  n_defence: 1
+  min_goal_distance: 100
+  max_episode_s: 90
+  fw_altitude: [3, 8]          # fixed-wing height above the tallest roof (m); quadcopters fly 10-35 m up
+  fw_mode: search              # fixed-wings circle the map, then fly to their target once seen (policy = trained model flies them)
+  fw_detect_range: 60          # m: how far a searching plane sees a target
+  train:
+    total_timesteps: 300000
+    n_worlds: 2
+    run_dir: runs/quick_demo
+    checkpoint_every: 0

@@ -1,0 +1,8 @@
+# Low-rise suburb: curved streets, houses with gardens, lots of trees, no core.
+terrain:
+  seed: 21
+  size_m: 600
+  roads: {pattern: organic, block_size_m: 110, arterial_every: 4, removal_prob: 0.2, diagonal_avenues: 0}
+  zoning: {downtown_radius_frac: 0.0, midrise_radius_frac: 0.15, park_fraction: 0.12, industrial_fraction: 0.05}
+  trees: {street_tree_prob: 0.8, park_density_per_ha: 120}
+  relief: {amplitude_m: 12}

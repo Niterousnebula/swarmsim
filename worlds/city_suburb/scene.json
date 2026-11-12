@@ -1,0 +1,83 @@
+{
+ "size": 600.0,
+ "centre": [
+  20.24046639485791,
+  7.620986129109696
+ ],
+ "meshes": [
+  {
+   "file": "meshes/ground_0.obj",
+   "texture": "textures/ground.png",
+   "kind": "ground",
+   "collision": true,
+   "faces": 18432
+  },
+  {
+   "file": "meshes/walls_stucco_pastel_0.obj",
+   "texture": "textures/facade_stucco_pastel.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 648
+  },
+  {
+   "file": "meshes/walls_stucco_cream_0.obj",
+   "texture": "textures/facade_stucco_cream.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 630
+  },
+  {
+   "file": "meshes/walls_brick_red_0.obj",
+   "texture": "textures/facade_brick_red.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 618
+  },
+  {
+   "file": "meshes/walls_house_siding_0.obj",
+   "texture": "textures/facade_house_siding.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 464
+  },
+  {
+   "file": "meshes/walls_office_concrete_0.obj",
+   "texture": "textures/facade_office_concrete.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 8
+  },
+  {
+   "file": "meshes/roofs_0.obj",
+   "texture": "textures/roofs.png",
+   "kind": "building",
+   "collision": true,
+   "faces": 1176
+  },
+  {
+   "file": "meshes/trees_0.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 30034
+  },
+  {
+   "file": "meshes/trees_1.obj",
+   "texture": "textures/vegetation.png",
+   "kind": "tree",
+   "collision": true,
+   "faces": 28098
+  }
+ ],
+ "attribution": [],
+ "counts": {
+  "roads": 50,
+  "blocks": 25,
+  "buildings": 274,
+  "trees": 1498,
+  "buildings_by_zone": {
+   "residential": 273,
+   "industrial": 1
+  }
+ }
+}

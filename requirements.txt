@@ -1,0 +1,12 @@
+numpy
+shapely>=2.1
+pillow
+pyyaml
+requests
+pybullet
+gymnasium
+pettingzoo
+stable-baselines3      # pulls in torch
+# optional
+# onnx onnxscript onnxruntime   # only for ONNX export / the onnx: policy plugin
+pytest

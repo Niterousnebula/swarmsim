@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Editors and local tools
+.vscode/
+.idea/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Generated maps and downloaded map data (rebuilt on demand; python reset.py clears them)
+cache/
+worlds/custom_*/
+
+# Training runs: only the bundled models are tracked
+runs/*
+!runs/stage1_navigate/
+!runs/stage2_defence/
+runs/*/stop
+runs/*/checkpoint_*.zip
+
+# Recordings and logs
+/*.gif
+/*.mp4
+*.log
+tb_logs/
+
+# Local recordings
+tests/Video.mp4

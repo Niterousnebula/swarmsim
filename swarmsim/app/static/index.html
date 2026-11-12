@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>swarmsim</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<canvas id="view" tabindex="0" aria-label="3-D view of the city and the drones"></canvas>
+<canvas id="labels" aria-hidden="true"></canvas>
+
+<div class="toolbar panel" role="toolbar" aria-label="View">
+  <div class="seg" role="group" aria-label="What dragging with the left mouse button does">
+    <button data-tool="orbit" class="on" title="Left-drag turns the view. Right-drag slides it.">Orbit</button>
+    <button data-tool="pan" title="Left-drag slides the view. Right-drag turns it.">Pan</button>
+  </div>
+  <span class="sep"></span>
+  <button id="btn-follow" title="Keep the camera on the selected drone (F)">Follow</button>
+  <button id="btn-pilot" title="Fly the selected drone yourself (Enter)">Pilot</button>
+  <span class="sep"></span>
+  <button id="btn-home" title="Back to the overview (Home)">Reset view</button>
+  <button id="btn-keys" class="on" title="Show or hide the keys menu (H)">Keys</button>
+</div>
+
+<section class="panel card" id="sim-card" aria-label="Simulation">
+  <header>
+    <h1>swarmsim</h1>
+    <span id="sim-status" class="status">Connecting</span>
+  </header>
+  <label class="field">
+    <span>Flying</span>
+    <select id="model"></select>
+  </label>
+  <div class="row">
+    <button id="btn-pause">Pause</button>
+    <button id="btn-reset" title="Start again with new start and goal points">New episode</button>
+  </div>
+  <div class="field">
+    <span>Speed</span>
+    <div class="seg" id="speed" role="group" aria-label="Simulation speed">
+      <button data-speed="0.5">0.5×</button>
+      <button data-speed="1" class="on">1×</button>
+      <button data-speed="2">2×</button>
+      <button data-speed="4">4×</button>
+    </div>
+  </div>
+  <dl class="tally" id="tally">
+    <div><dt>Reached goal</dt><dd data-k="goal">0</dd></div>
+    <div><dt>Hit</dt><dd data-k="hit">0</dd></div>
+    <div><dt>Crashed</dt><dd data-k="crash">0</dd></div>
+    <div><dt>Timed out</dt><dd data-k="timeout">0</dd></div>
+  </dl>
+</section>
+
+<div class="side">
+<section class="panel card" id="train-card" aria-label="Training">
+  <header><h2>Training</h2><span id="train-state" class="status">Idle</span></header>
+  <form id="train-form">
+    <label class="field">
+      <span>Run name</span>
+      <input id="train-name" value="my_run" maxlength="40" spellcheck="false" autocomplete="off">
+    </label>
+    <label class="field">
+      <span>Steps</span>
+      <select id="train-steps">
+        <option value="50000">50,000 (quick test)</option>
+        <option value="300000" selected>300,000</option>
+        <option value="1000000">1,000,000</option>
+        <option value="2000000">2,000,000</option>
+      </select>
+    </label>
+    <label class="field">
+      <span>Start from</span>
+      <select id="train-init"></select>
+    </label>
+    <label class="check">
+      <input type="checkbox" id="train-defence">
+      <span>Train against the defence platform</span>
+    </label>
+    <button type="submit" class="primary" id="btn-train">Start training</button>
+  </form>
+  <div id="train-progress" hidden>
+    <div class="bar"><i id="train-bar"></i></div>
+    <p id="train-line"></p>
+    <canvas id="train-chart" width="520" height="200"></canvas>
+    <p class="legend"><span class="k goal"></span>Reached goal <span class="k hit"></span>Hit <span class="k crash"></span>Crashed</p>
+    <p id="train-rates"></p>
+    <div class="row">
+      <button id="btn-train-stop">Stop and save</button>
+      <button id="btn-train-fly" class="primary" hidden>Fly this model</button>
+      <button id="btn-train-new" hidden>New run</button>
+    </div>
+    <pre id="train-error" hidden></pre>
+  </div>
+</section>
+
+<section class="panel card" id="setup-card" aria-label="Scenario">
+  <header><h2>Scenario</h2><span id="setup-state" class="status"></span></header>
+  <div class="seg tabs" role="tablist" aria-label="Scenario settings">
+    <button role="tab" data-tab="world" class="on" aria-selected="true">World</button>
+    <button role="tab" data-tab="positions" aria-selected="false">Positions</button>
+  </div>
+
+  <div class="pane" data-pane="world" role="tabpanel">
+    <label class="field">
+      <span>City</span>
+      <select id="city"></select>
+    </label>
+    <div id="newcity" class="sub" hidden>
+      <div class="grid2">
+        <label class="field"><span>Style</span><select id="nc-style"></select></label>
+        <label class="field"><span>Streets</span><select id="nc-pattern"></select></label>
+        <label class="field"><span>Size</span><select id="nc-size"></select></label>
+        <label class="field"><span>Seed</span>
+          <span class="inline"><input id="nc-seed" type="number" min="0" max="99999" step="1">
+          <button type="button" id="nc-dice" title="Pick a random seed" aria-label="Pick a random seed">⟳</button></span>
+        </label>
+      </div>
+      <button type="button" class="primary" id="btn-build">Build this city</button>
+    </div>
+    <div class="steps">
+      <span id="lbl-quads">Quadcopters</span>
+      <span class="stepper" data-key="n_quads"><button type="button" data-d="-1" aria-label="Fewer quadcopters">−</button><input type="number" aria-labelledby="lbl-quads"><button type="button" data-d="1" aria-label="More quadcopters">+</button></span>
+      <span id="lbl-wings">Fixed-wing</span>
+      <span class="stepper" data-key="n_fixedwing"><button type="button" data-d="-1" aria-label="Fewer fixed-wing drones">−</button><input type="number" aria-labelledby="lbl-wings"><button type="button" data-d="1" aria-label="More fixed-wing drones">+</button></span>
+      <span id="lbl-def">Air defences</span>
+      <span class="stepper" data-key="n_defence"><button type="button" data-d="-1" aria-label="Fewer air defences">−</button><input type="number" aria-labelledby="lbl-def"><button type="button" data-d="1" aria-label="More air defences">+</button></span>
+    </div>
+    <p class="hint" id="world-hint"></p>
+    <div class="row">
+      <button type="button" class="primary" id="btn-apply" disabled>Apply</button>
+      <button type="button" id="btn-defaults" title="Use the city and numbers the model was trained with">Model defaults</button>
+    </div>
+  </div>
+
+  <div class="pane" data-pane="positions" role="tabpanel" hidden>
+    <div class="field">
+      <span>Air defences <small class="sub-note">on open ground or flat roofs</small></span>
+      <div id="def-rows" class="rows"></div>
+    </div>
+    <div class="field">
+      <span>Goal <small class="sub-note">one for every drone</small></span>
+      <div class="row">
+        <button type="button" id="btn-set-goal">Set goal</button>
+        <button type="button" id="btn-goal-random" title="Every drone flies to one random goal again">Random</button>
+      </div>
+      <p class="hint" id="goal-status"></p>
+    </div>
+    <div class="field">
+      <span>Drone starts <small class="sub-note">Shift+click to pick several</small></span>
+      <div id="pos-chips" class="pick" role="group" aria-label="Drones to set up"></div>
+      <div class="row">
+        <button type="button" id="btn-pick-all" class="small">All</button>
+        <label class="inline unit grow" title="Height above the ground for the points you click (starts and the goal)">
+          <input id="pos-height" type="number" min="5" max="120" step="5" value="25" aria-label="Height above ground in metres"><span>m above ground</span>
+        </label>
+      </div>
+      <div class="row">
+        <button type="button" id="btn-set-start">Set start</button>
+        <button type="button" id="btn-pos-random" title="Random start points again for the picked drones">Random</button>
+      </div>
+      <label class="check"><input type="checkbox" id="pos-chain" checked><span>Then go on to the next drone</span></label>
+      <p class="hint" id="pos-status"></p>
+    </div>
+  </div>
+</section>
+</div>
+
+<aside class="panel keys" id="keys" aria-label="Keys">
+  <h2 id="keys-title">Camera</h2>
+  <dl id="keys-list"></dl>
+</aside>
+
+<section class="panel dronebar" aria-label="Drones">
+  <div id="chips"></div>
+  <p id="drone-info"></p>
+</section>
+
+<div id="banner" class="panel banner" hidden></div>
+<div id="placing" class="panel place-banner" hidden>
+  <span id="placing-text"></span>
+  <span class="placing-help">Right-click or</span>
+  <button type="button" id="btn-place-cancel">Stop <kbd>Esc</kbd></button>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

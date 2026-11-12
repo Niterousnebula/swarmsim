@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<robot name="defence">
+  <material name="body"><color rgba="0.33 0.38 0.3 1"/></material>
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="0"/>
+      <inertia ixx="0" iyy="0" izz="0" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0"/>
+      <geometry><mesh filename="defence.stl" scale="0.001 0.001 0.001"/></geometry>
+      <material name="body"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.35"/>
+      <geometry><box size="2.4 2.4 0.7"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="0 0 1.35"/>
+      <geometry><cylinder radius="0.75" length="1.300"/></geometry>
+    </collision>
+  </link>
+</robot>

@@ -1,0 +1,10 @@
+# Dense high-rise centre on a radial street plan.
+terrain:
+  seed: 33
+  size_m: 700
+  roads: {pattern: radial, block_size_m: 85, radial_spokes: 12, diagonal_avenues: 0}
+  zoning: {downtown_radius_frac: 0.42, midrise_radius_frac: 0.75, park_fraction: 0.05}
+  zones:
+    downtown: {height_median_m: 70, height_max_m: 220, tower_prob: 0.6}
+    midrise: {height_median_m: 26}
+  relief: {amplitude_m: 3}
