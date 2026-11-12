@@ -1,5 +1,11 @@
 # swarmsim
 
+**Swarm Defence RL Trainer Simulator**
+
+[![SWARMSIM — 23 s overview film (click to play)](docs/swarmsim_film.jpg)](docs/swarmsim_film.mp4)
+
+*23-second overview film, silent. Click the image to play it.*
+
 A modular drone-swarm simulation environment in Python. Four modules that only
 talk to each other through files and plain data, so each can be replaced or
 extended on its own.
