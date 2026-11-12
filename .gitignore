@@ -35,3 +35,6 @@ tb_logs/
 
 # Local recordings
 tests/Video.mp4
+
+# Video build workspace (the finished video is copied to docs/)
+brag-output/

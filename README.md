@@ -13,6 +13,17 @@ extended on its own.
 
 The drones are the learning agents. The defence platform is scripted.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![3-D overview of a generated city as a point cloud, with fixed-wing search loops and defence positions](docs/screenshots/city_3d_overview.webp) | ![Top-down map with drone starts, search loops, the goal and four air defences](docs/screenshots/map_top_down.webp) |
+| 3-D view: the city as a point cloud, planes on their search loops | Top-down: starts, goal, air defences and loops |
+| ![Piloting a fixed-wing drone between towers towards the goal](docs/screenshots/piloting_fixed_wing.webp) | ![Training panel with progress and outcome chart](docs/screenshots/training_panel.png) |
+| Piloting a fixed-wing yourself | Training from the app, with live outcomes |
+| ![Scenario panel: defences, goal and drone starts](docs/screenshots/scenario_panel.png) | ![Camera and piloting keys](docs/screenshots/camera_keys.png) |
+| Scenario panel: defences, goal and starts | Camera and piloting keys |
+
 ## Install
 
 ```bash
