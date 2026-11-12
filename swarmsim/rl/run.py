@@ -19,20 +19,29 @@ from .plugin import load_policy
 
 def run_policy(cfg: SimConfig, policy_spec: str, episodes: int = 5, seed: int = 100, gui: bool = False,
                record: str | None = None, realtime: bool = False, frame_every: int = 2,
-               verbose: bool = True) -> dict:
+               verbose: bool = True, panel: bool = True) -> dict:
     core = SwarmCore(cfg, seed=seed, gui=gui)
     policy = load_policy(policy_spec, core.info())
     frames, totals = [], {"goal": 0, "crash": 0, "hit": 0, "out_of_bounds": 0, "timeout": 0}
     returns, shots = [], 0
+    viewer = None
     if record:
         core.world.enable_projectile_visuals(radius=0.8)
+    if gui:                                   # follow camera, labels, mouse / keyboard control
+        from .viewer import Viewer
+        viewer = Viewer(core, policy_spec, episodes, verbose, panel)
+        core.on_substep = viewer.on_substep
     for ep in range(episodes):
         obs = core.reset(seed + ep)
         policy.reset()
-        if gui and ep == 0:
-            _gui_camera(core)
+        if viewer:
+            viewer.new_episode(ep)
         ep_ret = np.zeros(core.n); step = 0
         while core.active.any():
+            if viewer:
+                viewer.wait_if_paused()
+                if viewer.skip or viewer.quit:
+                    break
             t0 = time.time()
             actions = policy.act(obs)
             obs, rew, term, trunc, outcome = core.step(actions)
@@ -43,18 +52,22 @@ def run_policy(cfg: SimConfig, policy_spec: str, episodes: int = 5, seed: int = 
             if record and ep == 0 and step % frame_every == 0:
                 frames.append(_frame(core))
             step += 1
-            if gui:
-                _update_markers(core)
-            if gui or realtime:
+            if viewer:
+                viewer.after_step(outcome)
+            elif realtime:
                 time.sleep(max(0.0, 1.0 / cfg.rl.policy_hz - (time.time() - t0)))
         returns.append(float(ep_ret.mean()))
         shots += sum(d.shots for d in core.world.defences)
-        if verbose:
+        if viewer:
+            if viewer.quit:
+                break
+            viewer.end_episode()
+        elif verbose:
             print(f"episode {ep + 1}/{episodes}: mean return {returns[-1]:.1f}")
     core.close()
     n = max(sum(totals.values()), 1)
     result = {"policy": policy_spec, "episodes": episodes, "drones_per_episode": core.n,
-              "mean_return": float(np.mean(returns)),
+              "mean_return": float(np.mean(returns)) if returns else 0.0,
               "rates": {k: round(v / n, 3) for k, v in totals.items()}, "counts": totals,
               "defence_shots": shots}
     if record and frames:
@@ -126,13 +139,14 @@ def main():
     ap.add_argument("--policy", default="scripted")
     ap.add_argument("--episodes", type=int, default=5)
     ap.add_argument("--seed", type=int, default=100)
-    ap.add_argument("--gui", action="store_true", help="open the PyBullet 3-D window")
+    ap.add_argument("--gui", action="store_true", help="live 3-D window with follow camera, labels and controls")
+    ap.add_argument("--no-panel", action="store_true", help="with --gui: hide the side panels (keyboard only, bigger view)")
     ap.add_argument("--record", default=None, help="write a .gif or .mp4 (needs imageio-ffmpeg) of the first episode")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="override any config key, e.g. --set rl.move_speed=8 (repeatable)")
     args = ap.parse_args()
     cfg = load_config(args.config, set_flags=args.set)
-    print(json.dumps(run_policy(cfg, args.policy, args.episodes, args.seed, args.gui, args.record), indent=2))
+    print(json.dumps(run_policy(cfg, args.policy, args.episodes, args.seed, args.gui, args.record, panel=not args.no_panel), indent=2))
 
 
 if __name__ == "__main__":

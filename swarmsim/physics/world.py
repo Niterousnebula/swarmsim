@@ -39,6 +39,7 @@ class World:
         pb.setTimeStep(self.dt, physicsClientId=self.c)
         if gui:
             pb.configureDebugVisualizer(pb.COV_ENABLE_GUI, 0, physicsClientId=self.c)
+            pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 0, physicsClientId=self.c)
 
         self.city = CityMap.load(city_dir)
         self.static_bodies = self._load_city(Path(city_dir))
@@ -65,6 +66,8 @@ class World:
         self._wind_cache = [None, None]
         self.out_of_bounds = np.zeros(self.n, bool)
         self._refresh()
+        if gui:
+            pb.configureDebugVisualizer(pb.COV_ENABLE_RENDERING, 1, physicsClientId=self.c)
 
     # ------------------------------------------------------------------ setup
     def _load_city(self, d: Path):

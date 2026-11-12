@@ -48,6 +48,7 @@ class SwarmCore:
         self.city = self.world.city
         self.actions = ActionSet(rl)
         self.substeps = max(1, int(round(cfg.physics.physics_hz / rl.policy_hz)))
+        self.on_substep = None            # optional callback after every physics step (live viewer)
         self.max_steps = int(rl.max_episode_s * rl.policy_hz)
 
         # ---- observation layout --------------------------------------------
@@ -215,6 +216,8 @@ class SwarmCore:
         crashed = np.zeros(self.n, bool); hit = np.zeros(self.n, bool); oob = np.zeros(self.n, bool)
         for _ in range(self.substeps):
             w.step()
+            if self.on_substep is not None:
+                self.on_substep()
             agl = w.pos[:, 2] - self.city.ground_z(w.pos[:, 0], w.pos[:, 1])
             ev_h = w.hit & w.alive
             ev_c = w.crashed & w.alive & ~ev_h

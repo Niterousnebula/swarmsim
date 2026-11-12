@@ -69,8 +69,7 @@ def cmd_demo(args):
     cfg = load_config(config, set_flags=args.set)
     gui = not (args.no_gui or args.record)
     if gui:
-        print("Opening the 3-D window. Blue = drone, green = its goal, red = defence platform, "
-              "yellow = projectile.\nCtrl + drag rotates, mouse wheel zooms.")
+        print("Opening the 3-D window. Click inside it once, then use the keys listed below.")
     result = run_policy(cfg, policy, episodes=args.episodes, seed=args.seed, gui=gui, record=args.record)
     print(json.dumps(result, indent=2))
 
