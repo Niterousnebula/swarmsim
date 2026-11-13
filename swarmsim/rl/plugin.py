@@ -10,6 +10,8 @@ simulator never need to know where the decisions come from.
         "torchscript:policy.pt"            TorchScript module  obs -> action / logits
         "onnx:policy.onnx"                 ONNX graph (onnxruntime), same contract
         "scripted"                         rule-based baseline (no training)
+        "planner"                          A* route planner that avoids defence platforms (oracle baseline)
+        "planner_blind"                    the same planner ignoring the defence
         "random"                           uniformly random actions
         "mypkg.mymodule:MyPolicy"          any importable PolicyPlugin subclass
 """
@@ -157,6 +159,8 @@ def register(cls):
 
 def load_policy(spec: str, info: dict, **kwargs) -> PolicyPlugin:
     name, _, arg = spec.partition(":")
+    if name.startswith("planner"):
+        from . import planner  # noqa: F401  (registers the A* baselines)
     if name in PLUGINS:
         return PLUGINS[name](info, path=arg, **kwargs) if arg else PLUGINS[name](info, **kwargs)
     if arg:                                   # "module.path:ClassName"

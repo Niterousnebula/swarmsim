@@ -195,6 +195,8 @@ class Sim(threading.Thread):
             self.city = city
             self.core = SwarmCore(cfg, seed=self.seed)
             self.policy = load_policy(spec, self.core.info())
+            if hasattr(self.policy, "bind"):
+                self.policy.bind(self.core)
             n, nd = self.core.n, len(self.core.world.defences)
             for d, size in ((self.starts, n), (self.goals, n), (self.defence_xy, nd)):
                 for k in [k for k in d if k >= size]:

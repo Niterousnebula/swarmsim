@@ -22,6 +22,8 @@ def run_policy(cfg: SimConfig, policy_spec: str, episodes: int = 5, seed: int = 
                verbose: bool = True, panel: bool = True) -> dict:
     core = SwarmCore(cfg, seed=seed, gui=gui)
     policy = load_policy(policy_spec, core.info())
+    if hasattr(policy, "bind"):              # planners read the map and defence positions from the simulator
+        policy.bind(core)
     frames, totals = [], {"goal": 0, "crash": 0, "hit": 0, "out_of_bounds": 0, "timeout": 0}
     returns, shots = [], 0
     viewer = None

@@ -102,6 +102,10 @@ class SwarmCore:
             p = np.array([x, y, z])
             if not city.is_free(x, y, z, clearance=3.0):
                 continue
+            if self.rl.clear_of_defence and any(
+                    np.hypot(x - d.muzzle[0], y - d.muzzle[1]) < 1.1 * self.cfg.models.defence.range_m
+                    for d in self.world.defences):
+                continue
             if far_from is not None and np.linalg.norm(p[:2] - far_from[:2]) < min_dist:
                 continue
             others = self.world.pos[self.world.alive]

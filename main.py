@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parent
 VENV_PYTHON = ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 COMMANDS = ("app", "demo", "train", "test")
 BUNDLED = {"stage1": "runs/stage1_navigate", "stage2": "runs/stage2_defence"}
-BUILTIN_POLICIES = ("scripted", "random")
+BUILTIN_POLICIES = ("scripted", "random", "planner", "planner_blind")
 DEFAULT_CONFIG = "configs/quick_demo.yaml"
 
 

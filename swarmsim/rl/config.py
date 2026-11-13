@@ -53,6 +53,8 @@ class RLConfig:
     shared_goal: bool = False            # all drones fly to the same goal
     ceiling_agl: float = 130.0           # flying above this ends the episode
     coverage_cell_m: float = 50.0
+    clear_of_defence: bool = False       # never put a start or a goal inside a platform's firing range, so every
+                                         # hit is one the drone could have avoided by choosing another route
     defence_relocate_s: float = 120.0    # the platform moves to a new random spot this often (training)
 
     # --- actions ------------------------------------------------------------

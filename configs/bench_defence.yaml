@@ -1,0 +1,30 @@
+# Benchmark scenario for the research branch: "reach the goal past one defence platform".
+# Every method is evaluated on exactly these settings (scripts/benchmark.py).
+#
+# Fair by construction: starts and goals are never inside the firing zone
+# (rl.clear_of_defence), so every hit is one a better route would have avoided.
+terrain:
+  seed: 11
+  size_m: 300
+  water: {river: false}
+  zoning: {downtown_radius_frac: 0.0, midrise_radius_frac: 0.25}
+  relief: {amplitude_m: 3.0}
+
+models:
+  defence:
+    range_m: 60.0              # firing range
+    detection_range: 90.0
+    dispersion_deg: 2.5
+
+rl:
+  n_quads: 8
+  n_fixedwing: 0
+  n_defence: 1
+  min_goal_distance: 100
+  max_episode_s: 90
+  clear_of_defence: true
+  train:
+    total_timesteps: 1000000
+    n_worlds: 2
+    run_dir: runs/bench_defence
+    checkpoint_every: 0

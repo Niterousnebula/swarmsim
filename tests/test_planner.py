@@ -1,0 +1,57 @@
+import numpy as np
+
+from swarmsim.config import load_config
+from swarmsim.rl.core import SwarmCore
+from swarmsim.rl.planner import astar
+from swarmsim.rl.plugin import load_policy
+from swarmsim.rl.run import run_policy
+
+SMALL = {"terrain": {"size_m": 250, "seed": 9, "textures": {"ground_px": 512}},
+         "models": {"defence": {"range_m": 50.0, "detection_range": 80.0}},
+         "rl": {"n_quads": 4, "n_defence": 1, "min_goal_distance": 80, "max_episode_s": 60, "clear_of_defence": True}}
+
+
+def test_astar_goes_around_walls_and_expensive_cells():
+    cost = np.ones((9, 9))
+    cost[4, 1:8] = np.inf                                   # a wall with gaps at both ends
+    path = astar(cost, (0, 4), (8, 4))
+    assert path[0] == (0, 4) and path[-1] == (8, 4)
+    assert all(np.isfinite(cost[c]) for c in path) and any(c[1] in (0, 8) for c in path)
+    cost[4, 0] = cost[4, 8] = np.inf
+    assert astar(cost, (0, 4), (8, 4)) is None              # sealed off
+    cost = np.ones((9, 9)); cost[2:7, 2:7] = 25.0           # a costly zone in the middle
+    path = astar(cost, (4, 0), (4, 8))
+    assert all(cost[c] == 1.0 for c in path)                # cheaper to walk around it
+
+
+def test_clear_of_defence_keeps_starts_and_goals_out_of_range():
+    core = SwarmCore(load_config(None, SMALL), seed=3)
+    for seed in range(5):
+        core.reset(seed)
+        mz = core.world.defences[0].muzzle
+        for pts in (core.world.pos, core.goal):
+            assert np.all(np.hypot(pts[:, 0] - mz[0], pts[:, 1] - mz[1]) >= 50.0)
+    core.close()
+
+
+def test_planner_route_avoids_the_firing_zone():
+    core = SwarmCore(load_config(None, SMALL), seed=5)
+    aware, blind = load_policy("planner", core.info()), load_policy("planner_blind", core.info())
+    aware.bind(core); blind.bind(core)
+    inside = {"planner": 0, "planner_blind": 0}
+    for seed in range(4):
+        obs = core.reset(seed)
+        mz = core.world.defences[0].muzzle
+        for name, pol in (("planner", aware), ("planner_blind", blind)):
+            pol.reset(); pol.act(obs)
+            for p in pol.paths.values():
+                d = np.hypot(p["pts"][:, 0] - mz[0], p["pts"][:, 1] - mz[1])
+                seen = core.world.line_of_sight(mz, np.column_stack([p["pts"], np.full(len(d), p["z"])]))
+                inside[name] += int(np.sum((d < 50.0) & seen))
+    core.close()
+    assert inside["planner"] == 0 and inside["planner_blind"] > 0
+
+
+def test_planner_flies_to_the_goal():
+    res = run_policy(load_config(None, SMALL), "planner", episodes=2, seed=11, verbose=False)
+    assert res["counts"]["goal"] >= 6 and res["counts"]["hit"] <= 1
