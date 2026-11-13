@@ -17,11 +17,32 @@ from .actions import ActionSet
 from .wingpilot import WingPilot
 
 
+def randomized_terrain(base, index: int):
+    """City number ``index`` of the training distribution: same map size as ``base``, but its own
+    street pattern, block size, density, building mix, relief and river. Deterministic per index."""
+    import copy
+    t = copy.deepcopy(base)
+    rng = np.random.default_rng([int(base.seed), int(index)])
+    t.seed = int(base.seed) + int(index)
+    t.roads.pattern = str(rng.choice(["grid", "organic", "radial"]))
+    t.roads.block_size_m = float(rng.uniform(70.0, 125.0))
+    t.roads.rotation_deg = float(rng.uniform(0.0, 90.0))
+    t.zoning.downtown_radius_frac = float(rng.choice([0.0, 0.0, 0.15, 0.3]))
+    t.zoning.midrise_radius_frac = float(max(t.zoning.downtown_radius_frac + 0.1, rng.uniform(0.2, 0.7)))
+    t.zoning.park_fraction = float(rng.uniform(0.03, 0.15))
+    t.relief.amplitude_m = float(rng.uniform(0.0, 8.0))
+    t.water.river = bool(rng.random() < 0.3)
+    t.textures.ground_px = min(int(t.textures.ground_px), 512)      # training cities: small files
+    return t
+
+
 def ensure_city(cfg: SimConfig, seed_offset: int = 0) -> Path:
     """Return a city bundle for this config, building (and caching) it if needed."""
     if cfg.rl.city_dir:
         return Path(cfg.rl.city_dir)
     tcfg = replace(cfg.terrain, seed=cfg.terrain.seed + seed_offset)
+    if cfg.rl.randomize_cities:
+        tcfg = randomized_terrain(cfg.terrain, seed_offset)
     key = hashlib.md5(json.dumps(asdict(tcfg), sort_keys=True, default=str).encode()).hexdigest()[:10]
     out = Path(cfg.rl.cache_dir) / f"city_{key}"
     if not (out / "scene.json").exists():
@@ -90,11 +111,16 @@ class SwarmCore:
         self.wing_top = self.city.max_height + max(rl.fw_altitude) + 30.0
 
     # ------------------------------------------------------------------ spawn
-    def _sample_point(self, agl, min_sep=6.0, far_from=None, min_dist=0.0, high=False):
+    def _sample_point(self, agl, min_sep=6.0, far_from=None, min_dist=0.0, high=False, max_dist=0.0, near=0.0):
         city, half = self.city, self.city.half
         margin = 20.0
         for _ in range(300):
             x, y = self.rng.uniform(-half + margin, half - margin, 2)
+            if near > 0.0 and self.world.defences:          # somewhere around one of the platforms
+                d = self.world.defences[int(self.rng.integers(len(self.world.defences)))]
+                r, a = near * np.sqrt(self.rng.random()), self.rng.uniform(0.0, 2.0 * np.pi)
+                x = float(np.clip(d.muzzle[0] + r * np.cos(a), -half + margin, half - margin))
+                y = float(np.clip(d.muzzle[1] + r * np.sin(a), -half + margin, half - margin))
             if high:      # fixed-wing: above every roof
                 z = city.max_height + self.rng.uniform(*self.rl.fw_altitude)
             else:
@@ -107,6 +133,8 @@ class SwarmCore:
                     for d in self.world.defences):
                 continue
             if far_from is not None and np.linalg.norm(p[:2] - far_from[:2]) < min_dist:
+                continue
+            if far_from is not None and max_dist > min_dist and np.linalg.norm(p[:2] - far_from[:2]) > max_dist:
                 continue
             others = self.world.pos[self.world.alive]
             if len(others) and np.min(np.linalg.norm(others - p, axis=1)) < min_sep:
@@ -146,7 +174,7 @@ class SwarmCore:
             w.kill(i)
         wing = w.kind(i) == "fixedwing"
         start = (np.array(self.start_at[i], float) if i in self.start_at
-                 else self._sample_point(rl.spawn_agl, high=wing))
+                 else self._sample_point(rl.spawn_agl, high=wing, near=0.0 if wing else rl.spawn_near_defence_m))
         dist = min(rl.min_goal_distance, 0.6 * self.city.size)
         if rl.task == "coverage":
             goal = start
@@ -155,7 +183,8 @@ class SwarmCore:
         elif rl.shared_goal and self.active.any():
             goal = self.goal[np.flatnonzero(self.active)[0]]
         else:
-            goal = self._sample_point(rl.goal_agl, min_sep=0.0, far_from=start, min_dist=dist, high=False)
+            goal = self._sample_point(rl.goal_agl, min_sep=0.0, far_from=start, min_dist=dist, high=False,
+                                      max_dist=rl.max_goal_distance)
         self.goal[i] = goal
         yaw = (np.arctan2(goal[1] - start[1], goal[0] - start[0]) + self.rng.uniform(-1.0, 1.0)
                if rl.task == "navigate" else self.rng.uniform(-np.pi, np.pi))

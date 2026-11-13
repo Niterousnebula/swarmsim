@@ -84,7 +84,7 @@ class PlannerPolicy(PolicyPlugin):
 
     def __init__(self, info, cell_m: float = 4.0, threat_cost: float = 25.0, threat_margin_m: float = 8.0,
                  clearance_m: float = 4.0, lookahead_m: float = 10.0, cruise_percentile: float = 99.5,
-                 cruise_cap_agl: float = 60.0, **kw):
+                 cruise_cap_agl: float = 35.0, **kw):
         super().__init__(info)
         self.cell, self.threat_cost, self.threat_margin = float(cell_m), float(threat_cost), float(threat_margin_m)
         self.clearance, self.lookahead = float(clearance_m), float(lookahead_m)
@@ -162,7 +162,7 @@ class PlannerPolicy(PolicyPlugin):
             for cell in (s, g):                                     # the drone is where it is: never block its own cell
                 if not np.isfinite(cost[cell]):
                     cost[cell] = 1.0
-            path = astar(cost, s, g)
+            path = self._search(cost, s, g)
             if path is None:
                 if z + 8.0 > ceiling:
                     break
@@ -175,6 +175,17 @@ class PlannerPolicy(PolicyPlugin):
             pts = self._densify(pts)
             pts[0], pts[-1] = pos[:2], goal[:2]
         self.paths[i] = {"pts": pts, "z": z, "goal": goal.copy(), "key": self._defence_key(), "k": 0}
+
+    def _search(self, cost, s, g):
+        """A* inside a window around start and goal (fast on large maps); the whole map only if that fails."""
+        pad = int(math.ceil((self.core.cfg.models.defence.range_m + self.threat_margin + 80.0) / self.cell))
+        r0, r1 = max(0, min(s[0], g[0]) - pad), min(self.n_cells, max(s[0], g[0]) + pad + 1)
+        c0, c1 = max(0, min(s[1], g[1]) - pad), min(self.n_cells, max(s[1], g[1]) + pad + 1)
+        if (r1 - r0) * (c1 - c0) < 0.7 * cost.size:
+            path = astar(cost[r0:r1, c0:c1], (s[0] - r0, s[1] - c0), (g[0] - r0, g[1] - c0))
+            if path is not None:
+                return [(r + r0, c + c0) for r, c in path]
+        return astar(cost, s, g)
 
     @staticmethod
     def _line_ok(cost, a, b) -> bool:

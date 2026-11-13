@@ -64,3 +64,33 @@ def test_imitation_produces_a_loadable_model(tmp_path):
     assert model.exists() and (tmp_path / "bc" / "imitation.csv").read_text().count("\n") == 3
     res = run_policy(cfg, f"sb3:{model}", episodes=1, seed=1, verbose=False)
     assert sum(res["counts"].values()) == 4
+
+
+def test_city_pool_gives_each_index_its_own_style_and_rotates(tmp_path):
+    from swarmsim.rl.core import randomized_terrain
+    from swarmsim.rl.vec import SwarmVecEnv
+    base = load_config(None, SMALL).terrain
+    a, b, again = randomized_terrain(base, 1), randomized_terrain(base, 2), randomized_terrain(base, 1)
+    assert a == again and a != b and a.size_m == base.size_m          # deterministic, different, same map size
+    cfg = load_config(None, {**SMALL, "terrain": {"size_m": 200, "seed": 9, "textures": {"ground_px": 256}},
+                             "rl": {**SMALL["rl"], "train_cities": 3, "randomize_cities": True, "city_swap_steps": 40,
+                                    "cache_dir": str(tmp_path), "train": {"n_worlds": 1}}})
+    env = SwarmVecEnv(cfg, n_worlds=1, seed=0)
+    obs = env.reset()
+    swaps = 0
+    for _ in range(40):
+        env.step_async(np.zeros(env.num_envs, int))
+        obs, rew, done, info = env.step_wait()
+        swaps += int(done.all())
+    env.close()
+    assert swaps >= 2 and len(env.cities_seen) >= 2 and obs.shape == (4, env.observation_space.shape[0])
+
+
+def test_goal_distance_cap():
+    cfg = load_config(None, {**SMALL, "rl": {**SMALL["rl"], "min_goal_distance": 60, "max_goal_distance": 90}})
+    core = SwarmCore(cfg, seed=2)
+    for seed in range(4):
+        core.reset(seed)
+        d = np.hypot(*(core.goal[:, :2] - core.world.pos[:, :2]).T)
+        assert np.all(d >= 59.0) and np.all(d <= 91.0)
+    core.close()

@@ -53,6 +53,15 @@ class RLConfig:
     shared_goal: bool = False            # all drones fly to the same goal
     ceiling_agl: float = 130.0           # flying above this ends the episode
     coverage_cell_m: float = 50.0
+    spawn_near_defence_m: float = 0.0    # 0 = start anywhere; otherwise quadcopters start within this distance of a
+                                         # platform, so the defence matters as much on a 1 km map as on a small one
+    max_goal_distance: float = 0.0       # 0 = anywhere on the map; otherwise goals are at most this far from the start,
+                                         # which keeps trips comparable between small and large maps
+    # --- training on many cities (generalisation experiments) ---
+    train_cities: int = 0                # 0 = one fixed city per simulator; N = train on a pool of N cities
+    city_pool_offset: int = 0            # first city index of the pool (different offsets = different pools)
+    city_swap_steps: int = 6000          # drone-steps a simulator spends in one city before moving to another
+    randomize_cities: bool = False       # every city index gets its own style (street pattern, density, heights ...)
     clear_of_defence: bool = False       # never put a start or a goal inside a platform's firing range, so every
                                          # hit is one the drone could have avoided by choosing another route
     defence_relocate_s: float = 120.0    # the platform moves to a new random spot this often (training)

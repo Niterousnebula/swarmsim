@@ -1,0 +1,28 @@
+# Generalisation experiment (scripts/experiment_generalisation.py):
+# train on N procedurally generated cities, test on unseen generated cities and on real ones.
+terrain:
+  seed: 500
+  size_m: 300                  # training and generated test cities; real maps keep their own size
+  textures: {ground_px: 512}
+
+models:
+  defence:
+    range_m: 60.0
+    detection_range: 90.0
+    dispersion_deg: 2.5
+
+rl:
+  n_quads: 8
+  n_fixedwing: 0
+  n_defence: 1
+  min_goal_distance: 100
+  spawn_near_defence_m: 200    # start within 200 m of the platform, so it matters on a 1 km map as on a 300 m one
+  max_goal_distance: 250       # same trip lengths on a 300 m map and on a 1 km real map
+  max_episode_s: 90
+  clear_of_defence: true
+  randomize_cities: true       # every city index has its own street pattern, density and heights
+  city_swap_steps: 6000
+  train:
+    n_worlds: 2
+    learning_rate: 0.0001      # for the PPO fine-tuning stage
+    checkpoint_every: 0

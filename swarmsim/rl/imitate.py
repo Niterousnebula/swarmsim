@@ -50,12 +50,12 @@ def imitate(cfg: SimConfig, run_dir: str | Path, rounds: int = 8, samples_per_ro
     policy = model.policy
     optim = torch.optim.Adam(policy.parameters(), lr=lr)
     rng = np.random.default_rng(seed)
-    cores = raw.cores
-    experts = []
-    for core in cores:
+    def make_expert(core):
         e = load_policy(expert, core.info())
         e.bind(core)
-        experts.append(e)
+        return e
+
+    experts = [make_expert(core) for core in raw.cores]
 
     data_obs, data_act = [], []
     log = open(run_dir / "imitation.csv", "w", newline="")
@@ -68,14 +68,18 @@ def imitate(cfg: SimConfig, run_dir: str | Path, rounds: int = 8, samples_per_ro
         got, counts = 0, {"goal": 0, "hit": 0, "crash": 0, "timeout": 0, "out_of_bounds": 0}
         policy.set_training_mode(False)
         while got < samples_per_round:
-            for core, exp in zip(cores, experts):
+            for k in range(len(raw.cores)):
+                if raw.swapping and raw._since[k] >= cfg.rl.city_swap_steps:
+                    raw.swap_city(k)                              # next city of the training pool
+                    experts[k] = make_expert(raw.cores[k])
+                core, exp = raw.cores[k], experts[k]
                 ep_seed += 1
                 obs = core.reset(ep_seed); exp.reset()
                 while core.active.any():
                     want = np.asarray(exp.act(obs))                       # the planner's choice in this situation
                     live = core.active & core.world.alive
                     data_obs.append(obs[live].copy()); data_act.append(want[live].copy())
-                    got += int(live.sum())
+                    got += int(live.sum()); raw._since[k] += int(live.sum())
                     if beta >= 1.0:
                         act = want
                     else:
