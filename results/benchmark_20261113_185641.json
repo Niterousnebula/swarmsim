@@ -1,0 +1,78 @@
+{
+ "config": "configs/bench_defence.yaml",
+ "set": [],
+ "rows": [
+  {
+   "world": "config map",
+   "policy": "planner",
+   "drones": 200,
+   "episodes": 25,
+   "seed": 1000,
+   "counts": {
+    "goal": 194,
+    "crash": 0,
+    "hit": 0,
+    "out_of_bounds": 0,
+    "timeout": 6
+   },
+   "mean_return": 28.48,
+   "goal_ci": [
+    0.9361048802675267,
+    0.9861798741692518
+   ],
+   "hit_ci": [
+    0.0,
+    0.018846005918320894
+   ],
+   "seconds": 215.7
+  },
+  {
+   "world": "config map",
+   "policy": "sb3:runs/bc_ppo/model.zip",
+   "drones": 200,
+   "episodes": 25,
+   "seed": 1000,
+   "counts": {
+    "goal": 172,
+    "crash": 8,
+    "hit": 13,
+    "out_of_bounds": 1,
+    "timeout": 6
+   },
+   "mean_return": 23.14,
+   "goal_ci": [
+    0.8051000619915237,
+    0.9013308137472852
+   ],
+   "hit_ci": [
+    0.03837598764975976,
+    0.10802003749917945
+   ],
+   "seconds": 317.5
+  },
+  {
+   "world": "config map",
+   "policy": "sb3:runs/bc_planner/model.zip",
+   "drones": 200,
+   "episodes": 25,
+   "seed": 1000,
+   "counts": {
+    "goal": 126,
+    "crash": 1,
+    "hit": 1,
+    "out_of_bounds": 0,
+    "timeout": 72
+   },
+   "mean_return": 13.17,
+   "goal_ci": [
+    0.5612250134987606,
+    0.6938750249624759
+   ],
+   "hit_ci": [
+    0.0008831459893662054,
+    0.02777439986977148
+   ],
+   "seconds": 456.4
+  }
+ ]
+}

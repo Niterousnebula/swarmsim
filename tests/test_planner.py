@@ -55,3 +55,12 @@ def test_planner_route_avoids_the_firing_zone():
 def test_planner_flies_to_the_goal():
     res = run_policy(load_config(None, SMALL), "planner", episodes=2, seed=11, verbose=False)
     assert res["counts"]["goal"] >= 6 and res["counts"]["hit"] <= 1
+
+
+def test_imitation_produces_a_loadable_model(tmp_path):
+    from swarmsim.rl.imitate import imitate
+    cfg = load_config(None, {**SMALL, "rl": {**SMALL["rl"], "max_episode_s": 8, "train": {"n_worlds": 1}}})
+    model = imitate(cfg, tmp_path / "bc", rounds=2, samples_per_round=150, epochs=1, verbose=False)
+    assert model.exists() and (tmp_path / "bc" / "imitation.csv").read_text().count("\n") == 3
+    res = run_policy(cfg, f"sb3:{model}", episodes=1, seed=1, verbose=False)
+    assert sum(res["counts"].values()) == 4

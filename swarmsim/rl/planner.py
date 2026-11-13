@@ -83,10 +83,12 @@ class PlannerPolicy(PolicyPlugin):
     name = "planner"
 
     def __init__(self, info, cell_m: float = 4.0, threat_cost: float = 25.0, threat_margin_m: float = 8.0,
-                 clearance_m: float = 4.0, lookahead_m: float = 10.0, **kw):
+                 clearance_m: float = 4.0, lookahead_m: float = 10.0, cruise_percentile: float = 99.5,
+                 cruise_cap_agl: float = 60.0, **kw):
         super().__init__(info)
         self.cell, self.threat_cost, self.threat_margin = float(cell_m), float(threat_cost), float(threat_margin_m)
         self.clearance, self.lookahead = float(clearance_m), float(lookahead_m)
+        self.cruise_percentile, self.cruise_cap = float(cruise_percentile), float(cruise_cap_agl)
         self.core = None
         self.reset()
 
@@ -103,6 +105,10 @@ class PlannerPolicy(PolicyPlugin):
         pad = np.pad(top, 1, mode="edge")                           # widen every obstacle by one cell
         self.top = np.max([pad[1 + a:1 + a + self.n_cells, 1 + b:1 + b + self.n_cells]
                            for a in (-1, 0, 1) for b in (-1, 0, 1)], axis=0)
+        # cruise above nearly every roof and tree, so the route depends on where the goal and the
+        # platforms are (which a drone can sense) and not on obstacles it cannot see from afar
+        over = float(np.percentile(self.top - self.ground, self.cruise_percentile)) + self.clearance + 1.0
+        self.cruise_agl = min(over, self.cruise_cap)
         self.reset()
 
     def reset(self) -> None:
@@ -121,7 +127,7 @@ class PlannerPolicy(PolicyPlugin):
 
     def _threat(self, z: float) -> np.ndarray:
         """Boolean grid: cells a platform can both reach and see at flight height ``z``."""
-        key = (self._defence_key(), round(z / 5.0))
+        key = (self._defence_key(), round(z))
         if key not in self._threat_cache:
             w = self.core.world
             mask = np.zeros((self.n_cells, self.n_cells), bool)
@@ -130,11 +136,14 @@ class PlannerPolicy(PolicyPlugin):
                 near = np.argwhere(np.hypot(self.gx - d.muzzle[0], self.gy - d.muzzle[1]) < reach)
                 if not len(near):
                     continue
-                pts = np.column_stack([self.gx[near[:, 0], near[:, 1]], self.gy[near[:, 0], near[:, 1]],
-                                       np.full(len(near), z)])
-                seen = np.asarray(w.line_of_sight(d.muzzle, pts), bool)
+                seen = np.zeros(len(near), bool)
+                for dz in (0.0, 3.0):                      # a little above too: cover that only just hides a drone is no cover
+                    pts = np.column_stack([self.gx[near[:, 0], near[:, 1]], self.gy[near[:, 0], near[:, 1]],
+                                           np.full(len(near), z + dz)])
+                    seen |= np.asarray(w.line_of_sight(d.muzzle, pts), bool)
                 mask[near[seen, 0], near[seen, 1]] = True
-            self._threat_cache = {key: mask} if len(self._threat_cache) > 16 else self._threat_cache
+            if len(self._threat_cache) > 64:
+                self._threat_cache = {}
             self._threat_cache[key] = mask
         return self._threat_cache[key]
 
@@ -144,7 +153,8 @@ class PlannerPolicy(PolicyPlugin):
         pos, goal = core.world.pos[i], core.goal[i]
         s, g = self._cell_of(pos[0], pos[1]), self._cell_of(goal[0], goal[1])
         ceiling = float(np.max(self.ground)) + core.rl.ceiling_agl - 15.0
-        z = max(float(pos[2]), float(goal[2]))
+        z = max(float(pos[2]), float(goal[2]), float(self.core.city.ground_z(pos[0], pos[1])) + self.cruise_agl)
+        z = min(z, ceiling)
         path = None
         while path is None:
             cost = np.where(self.top + self.clearance > z, np.inf, 1.0)
@@ -168,8 +178,9 @@ class PlannerPolicy(PolicyPlugin):
 
     @staticmethod
     def _line_ok(cost, a, b) -> bool:
-        """True if the straight line a -> b crosses no blocked cell and no cell dearer than its ends."""
-        limit = max(cost[a], cost[b])
+        """True if the straight line a -> b crosses no blocked cell and no cell dearer than its cheaper
+        end (so a leg that ends just inside a firing zone is never extended across the zone)."""
+        limit = min(cost[a], cost[b])
         n = int(max(abs(b[0] - a[0]), abs(b[1] - a[1]))) * 2 + 1
         rr = np.round(np.linspace(a[0], b[0], n)).astype(int)
         cc = np.round(np.linspace(a[1], b[1], n)).astype(int)
