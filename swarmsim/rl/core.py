@@ -91,6 +91,8 @@ class SwarmCore:
 
         # ---- per-drone state --------------------------------------------------
         self.goal = np.zeros((self.n, 3))
+        self.rays = np.full((self.n, rl.n_rays + 2), rl.ray_range)   # last range-finder readings (m)
+        self.reflex_count = 0
         self.prev_dist = np.zeros(self.n)
         self.steps = np.zeros(self.n, int)
         self.active = np.zeros(self.n, bool)
@@ -234,6 +236,34 @@ class SwarmCore:
         k = np.argmin(np.linalg.norm(centres - p[:2], axis=1))
         return np.array([centres[k, 0], centres[k, 1], p[2]])
 
+    def _reflex(self, i: int, unit) -> np.ndarray:
+        """Obstacle braking, as on a real flight controller: if the range finder shows something in
+        the direction the command would move the drone, drop the horizontal part of the command and
+        climb instead (or just stop, when there is no room above). Also refuses to descend onto a
+        surface. The policy still chooses everything else, including where to turn."""
+        rl, w = self.rl, self.world
+        f, l, u, yw = np.asarray(unit, float)
+        rays, nr = self.rays[i], rl.n_rays
+        changed = False
+        if abs(f) > 0.05 or abs(l) > 0.05:
+            k = int(round(np.arctan2(l, f) / (2 * np.pi / nr))) % nr          # ray nearest the direction of travel
+            ahead = min(rays[k], rays[(k - 1) % nr], rays[(k + 1) % nr])
+            speed = float(np.hypot(w.vel[i, 0], w.vel[i, 1]))
+            brake = max(rl.reflex_min_m, speed * rl.reflex_time_s)
+            if ahead >= brake:                 # a second beam 2 m lower, so roofs are cleared with a margin
+                yaw = np.arctan2(w.R[i, 1, 0], w.R[i, 0, 0]) + np.arctan2(l, f)
+                low = w.raycast((w.pos[i] - [0.0, 0.0, 2.0])[None], np.array([[np.cos(yaw), np.sin(yaw), 0.0]]), brake)
+                ahead = min(ahead, float(low[0]))
+            if ahead < brake:
+                agl = w.pos[i, 2] - self.city.ground_z(w.pos[i, 0], w.pos[i, 1])
+                f = l = 0.0
+                u = 1.0 if (rays[nr + 1] > 4.0 and agl < rl.ceiling_agl - 15.0) else max(u, 0.0)
+                changed = True
+        if u < 0.0 and rays[nr] < 3.0:
+            u, changed = 0.0, True
+        self.reflex_count += int(changed)
+        return np.array([f, l, u, yw])
+
     # ------------------------------------------------------------------- step
     def step(self, actions):
         rl, w = self.rl, self.world
@@ -244,6 +274,8 @@ class SwarmCore:
                 self.actions.command(w, i, self.manual[i])
             elif self.wingpilot and w.kind(i) == "fixedwing":
                 self.wingpilot.command(i)             # search-and-home autopilot, not the policy
+            elif rl.collision_reflex and w.kind(i) == "quad":
+                self.actions.command(w, i, self._reflex(i, self.actions.unit(actions[i])))
             else:
                 self.actions.apply(w, i, actions[i])
         crashed = np.zeros(self.n, bool); hit = np.zeros(self.n, bool); oob = np.zeros(self.n, bool)
@@ -352,6 +384,8 @@ class SwarmCore:
         origins = np.repeat(pos, nr + 2, axis=0)
         d = w.raycast(origins, dirs.reshape(-1, 3), rl.ray_range).reshape(len(idx), nr + 2)
         obs[idx, L["rays"]] = d / rl.ray_range
+        self.rays[:] = rl.ray_range
+        self.rays[idx] = d
         self.min_ray[:] = rl.ray_range
         self.min_ray[idx] = d.min(1)
 

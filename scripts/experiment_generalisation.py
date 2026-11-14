@@ -5,6 +5,10 @@
     python scripts/experiment_generalisation.py                # the real thing (many hours, resumable)
     python scripts/experiment_generalisation.py --summary      # just print the table from finished runs
 
+    # test the models that are already trained again under changed settings (no training), e.g. with
+    # the collision reflex switched on; results go to their own folder:
+    python scripts/experiment_generalisation.py --eval-only --set rl.collision_reflex=true --results results/gen_reflex
+
 For every pool size N (default 1, 4, 16, 64) and every seed it
   1. trains a network to imitate the A* planner on N generated cities   (swarmsim.rl.imitate)
   2. fine-tunes it with PPO on the same N cities                        (swarmsim.rl.train)
@@ -117,13 +121,20 @@ def main():
     ap.add_argument("--baselines", nargs="*", default=["planner", "planner_blind", "scripted"])
     ap.add_argument("--out", default="runs/gen")
     ap.add_argument("--results", default="results/gen")
+    ap.add_argument("--eval-only", action="store_true", help="re-test existing models, train nothing")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                    help="override a config key for testing (use with --eval-only and a new --results folder)")
     ap.add_argument("--quick", action="store_true", help="tiny budgets, to check that everything runs")
     ap.add_argument("--summary", action="store_true", help="only print the table of finished runs")
     args = ap.parse_args()
     if args.quick:
         args.sizes, args.seeds, args.bc_rounds, args.bc_samples = [1, 3], [0], 2, 1500
         args.ppo_steps, args.test_cities, args.episodes, args.real_episodes = 4096, 2, 1, 1
-        args.out, args.results = "runs/gen_quick", "results/gen_quick"
+        args.out = "runs/gen_quick"
+        if args.results == "results/gen":
+            args.results = "results/gen_quick"
+    if args.set and not args.eval_only:
+        sys.exit("--set changes the test conditions; use it together with --eval-only and a new --results folder.")
 
     out, res = Path(args.out), Path(args.results)
     res.mkdir(parents=True, exist_ok=True)
@@ -137,7 +148,7 @@ def main():
     from swarmsim.rl.imitate import imitate
     from swarmsim.rl.train import train
 
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, set_flags=args.set)
     t0 = time.time()
     print(f"building {args.test_cities} test cities ...", flush=True)
     test_dirs = [ensure_city(cfg, TEST_OFFSET + j) for j in range(args.test_cities)]
@@ -167,6 +178,9 @@ def main():
                                                    "train": {"seed": seed, "total_timesteps": args.ppo_steps,
                                                              "run_dir": (out / tag).as_posix()}}})
         bc_model = out / f"{tag}_bc" / "model.zip"
+        if args.eval_only and not (out / tag / "done").exists():
+            print(f"[{tag}] no trained model in {out}, skipping", flush=True)
+            continue
         if not (out / f"{tag}_bc" / "done").exists():
             print(f"[{tag}] imitation on {n} cit{'y' if n == 1 else 'ies'} ...", flush=True)
             imitate(run_cfg, out / f"{tag}_bc", rounds=args.bc_rounds, samples_per_round=args.bc_samples,
@@ -182,6 +196,7 @@ def main():
         sets_now = {"train": (train_dirs, max(1, args.episodes * 2 // len(train_dirs))), **eval_sets}
         result = {"n_cities": n, "seed": seed, "pool_offset": run_cfg.rl.city_pool_offset,
                   "bc_rounds": args.bc_rounds, "bc_samples": args.bc_samples, "ppo_steps": args.ppo_steps,
+                  "test_overrides": args.set,
                   "eval": {name: evaluate(cfg, f"sb3:{model.as_posix()}", dirs, eps, seed=5000)
                            for name, (dirs, eps) in sets_now.items()},
                   "minutes": round((time.time() - t1) / 60, 1)}

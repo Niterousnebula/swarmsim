@@ -94,3 +94,31 @@ def test_goal_distance_cap():
         d = np.hypot(*(core.goal[:, :2] - core.world.pos[:, :2]).T)
         assert np.all(d >= 59.0) and np.all(d <= 91.0)
     core.close()
+
+
+def test_collision_reflex_stops_a_drone_flying_at_a_wall():
+    """A drone told to fly forward into the tallest building crashes without the reflex and
+    climbs over it with the reflex."""
+    from shapely.geometry import Polygon
+    results = {}
+    for reflex in (False, True):
+        cfg = load_config(None, {**SMALL, "rl": {**SMALL["rl"], "n_quads": 1, "n_defence": 0, "max_episode_s": 60,
+                                                 "collision_reflex": reflex}})
+        core = SwarmCore(cfg, seed=4)
+        core.reset(0)
+        b = max((q for q in core.city.buildings if not q.stacked), key=lambda q: q.height)
+        minx, miny, maxx, maxy = Polygon(b.footprint).bounds
+        start = np.array([minx - 12.0, (miny + maxy) / 2, b.ground_z + 0.5 * b.height])
+        core.world.spawn(0, start)                               # 12 m west of the wall, facing east
+        core.observe()
+        forward, outcome, top = core.actions.index("forward"), None, start[2]
+        for _ in range(200):
+            _, _, _, _, out = core.step(np.array([forward]))
+            top = max(top, float(core.world.pos[0, 2]))
+            if out[0] or core.world.pos[0, 0] > maxx + 3.0:
+                outcome = out[0]
+                break
+        results[reflex] = (outcome, top - start[2], core.reflex_count)
+        core.close()
+    assert results[False][0] == "crash" and results[False][2] == 0
+    assert results[True][0] != "crash" and results[True][1] > 0.4 * 6.0 and results[True][2] > 0

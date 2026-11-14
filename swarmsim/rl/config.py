@@ -53,6 +53,11 @@ class RLConfig:
     shared_goal: bool = False            # all drones fly to the same goal
     ceiling_agl: float = 130.0           # flying above this ends the episode
     coverage_cell_m: float = 50.0
+    # --- collision reflex: obstacle braking built into the flight controller (quadcopters) ---
+    collision_reflex: bool = False       # when the range finder shows an obstacle in the direction of travel, stop
+                                         # moving towards it and climb over it instead, whatever the policy asked for
+    reflex_time_s: float = 1.5           # react when the obstacle is closer than this many seconds of flight ...
+    reflex_min_m: float = 5.0            # ... or closer than this distance
     spawn_near_defence_m: float = 0.0    # 0 = start anywhere; otherwise quadcopters start within this distance of a
                                          # platform, so the defence matters as much on a 1 km map as on a small one
     max_goal_distance: float = 0.0       # 0 = anywhere on the map; otherwise goals are at most this far from the start,
