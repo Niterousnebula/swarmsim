@@ -1,0 +1,39 @@
+{
+ "n_cities": 64,
+ "seed": 1,
+ "pool_offset": 0,
+ "bc_rounds": 10,
+ "bc_samples": 30000,
+ "ppo_steps": 500000,
+ "eval": {
+  "train": {
+   "goal": 58,
+   "hit": 4,
+   "crash": 2,
+   "timeout": 0,
+   "out_of_bounds": 0
+  },
+  "unseen": {
+   "goal": 318,
+   "hit": 24,
+   "crash": 38,
+   "timeout": 16,
+   "out_of_bounds": 4
+  },
+  "delhi_cp": {
+   "goal": 91,
+   "hit": 5,
+   "crash": 17,
+   "timeout": 7,
+   "out_of_bounds": 0
+  },
+  "nsut": {
+   "goal": 94,
+   "hit": 3,
+   "crash": 14,
+   "timeout": 9,
+   "out_of_bounds": 0
+  }
+ },
+ "minutes": 50.1
+}

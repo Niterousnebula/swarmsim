@@ -1,0 +1,71 @@
+{
+ "planner": {
+  "unseen": {
+   "goal": 390,
+   "hit": 0,
+   "crash": 3,
+   "timeout": 7,
+   "out_of_bounds": 0
+  },
+  "delhi_cp": {
+   "goal": 117,
+   "hit": 0,
+   "crash": 0,
+   "timeout": 3,
+   "out_of_bounds": 0
+  },
+  "nsut": {
+   "goal": 116,
+   "hit": 0,
+   "crash": 0,
+   "timeout": 4,
+   "out_of_bounds": 0
+  }
+ },
+ "planner_blind": {
+  "unseen": {
+   "goal": 301,
+   "hit": 96,
+   "crash": 0,
+   "timeout": 3,
+   "out_of_bounds": 0
+  },
+  "delhi_cp": {
+   "goal": 111,
+   "hit": 6,
+   "crash": 0,
+   "timeout": 3,
+   "out_of_bounds": 0
+  },
+  "nsut": {
+   "goal": 110,
+   "hit": 7,
+   "crash": 0,
+   "timeout": 3,
+   "out_of_bounds": 0
+  }
+ },
+ "scripted": {
+  "unseen": {
+   "goal": 296,
+   "hit": 85,
+   "crash": 7,
+   "timeout": 12,
+   "out_of_bounds": 0
+  },
+  "delhi_cp": {
+   "goal": 109,
+   "hit": 7,
+   "crash": 3,
+   "timeout": 1,
+   "out_of_bounds": 0
+  },
+  "nsut": {
+   "goal": 102,
+   "hit": 8,
+   "crash": 3,
+   "timeout": 7,
+   "out_of_bounds": 0
+  }
+ }
+}
