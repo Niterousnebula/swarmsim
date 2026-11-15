@@ -188,7 +188,8 @@ class Sim(threading.Thread):
             model_city = Path(ensure_city(cfg)).as_posix()
             s = self.setup
             cfg.rl = replace(cfg.rl, **{k: s[k] for k in ("n_quads", "n_fixedwing", "n_defence") if k in s},
-                             city_dir=s.get("city", model_city), shared_goal=True)   # one goal for every drone
+                             city_dir=s.get("city", model_city), shared_goal=True,   # one goal for every drone
+                             collision_reflex=True)        # obstacle braking, as in the paper's results
             city = cfg.rl.city_dir
             if city != self.city:                 # fixed points belong to one map
                 self.starts.clear(); self.goals.clear(); self.defence_xy.clear()

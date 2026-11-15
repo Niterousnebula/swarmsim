@@ -1,6 +1,6 @@
 """One entry point for swarmsim.
 
-    python main.py                                  open the control app: live 3-D view, piloting, training
+    python main.py                                  open the control app with the best trained model
     python main.py app --model stage2               ... starting with the model trained against the defence platform
     python main.py demo --model stage2              fly a model in PyBullet's own window instead
     python main.py demo --model scripted --no-gui --episodes 5
@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 VENV_PYTHON = ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 COMMANDS = ("app", "demo", "train", "test")
-BUNDLED = {"stage1": "runs/stage1_navigate", "stage2": "runs/stage2_defence"}
+BUNDLED = {"best": "runs/gen/N1_s2", "stage1": "runs/stage1_navigate", "stage2": "runs/stage2_defence"}
 BUILTIN_POLICIES = ("scripted", "random", "planner", "planner_blind")
 DEFAULT_CONFIG = "configs/quick_demo.yaml"
 
@@ -53,7 +53,11 @@ def _run_dir(name: str) -> Path:
 def cmd_app(args):
     from swarmsim.app import serve
 
-    name = args.model if args.model in BUILTIN_POLICIES else _run_dir(args.model).name
+    if args.model in BUILTIN_POLICIES:
+        name = args.model
+    else:
+        run = _run_dir(args.model)
+        name = run.relative_to("runs").as_posix() if run.parts[:1] == ("runs",) else run.name
     serve(name, port=args.port, open_browser=not args.no_browser)
 
 
@@ -113,8 +117,9 @@ def main():
     set_help = "override any config key, e.g. --set physics.wind.mean_speed=8 (repeatable)"
 
     app = sub.add_parser("app", help="control app in the browser: 3-D view, piloting, training (default)")
-    app.add_argument("--model", default="stage1",
-                     help="what to fly first: stage1, stage2, scripted, random, or a run folder (default: stage1)")
+    app.add_argument("--model", default="best",
+                     help="what to fly first: best, planner, planner_blind, scripted, stage1, stage2, "
+                          "or a run folder (default: best)")
     app.add_argument("--port", type=int, default=8765)
     app.add_argument("--no-browser", action="store_true", help="do not open the page automatically")
     app.set_defaults(func=cmd_app)

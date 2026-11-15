@@ -733,15 +733,28 @@ $('model').addEventListener('change', (e) => { post({ type: 'load', model: e.tar
 for (const b of $('speed').children) b.addEventListener('click', () => post({ type: 'speed', value: Number(b.dataset.speed) }));
 
 // ----------------------------------------------------------------- training
-const MODEL_LABEL = { scripted: 'Scripted baseline (no training)', random: 'Random actions' };
+const MODEL_GROUPS = [['featured', 'Best trained models'], ['builtin', 'Planners and baselines'], ['trained', 'Other trained runs']];
+
+function modelOptions(models) {
+  return MODEL_GROUPS.map(([kind, title]) => {
+    const g = document.createElement('optgroup');
+    g.label = title;
+    g.append(...models.filter((m) => m.kind === kind).map((m) => {
+      const o = new Option(m.label || m.name, m.name);
+      if (m.desc) o.title = m.desc;
+      return o;
+    }));
+    return g;
+  }).filter((g) => g.children.length);
+}
 
 async function refreshModels() {
   try {
     S.models = await (await fetch('/api/models')).json();
   } catch { return; }
   const model = $('model'), init = $('train-init'), keep = [model.value, init.value];
-  model.replaceChildren(...S.models.map((m) => new Option(MODEL_LABEL[m.name] || m.name, m.name)));
-  init.replaceChildren(new Option('Scratch', ''), ...S.models.filter((m) => m.kind === 'trained').map((m) => new Option(m.name, m.name)));
+  model.replaceChildren(...modelOptions(S.models));
+  init.replaceChildren(new Option('Scratch', ''), ...S.models.filter((m) => m.kind !== 'builtin').map((m) => new Option(m.label || m.name, m.name)));
   if (S.scene) model.value = S.scene.model; else if (keep[0]) model.value = keep[0];
   init.value = keep[1] || '';
 }

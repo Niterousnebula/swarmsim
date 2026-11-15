@@ -13,15 +13,32 @@ from pathlib import Path
 
 DEFAULT_CONFIG = "configs/quick_demo.yaml"
 RUNS = Path("runs")
-BUILTIN = ("scripted", "random")
+BUILTIN = ("planner", "planner_blind", "scripted", "random")
+BUILTIN_LABELS = {      # (short label for the menu, longer description shown on hover)
+    "planner": ("A* planner (oracle)", "Plans a route with full knowledge of the map and the turret"),
+    "planner_blind": ("A* planner, threat-blind", "Same planner, but it ignores the turret"),
+    "scripted": ("Scripted baseline", "Hand-written rules, no training"),
+    "random": ("Random actions", "Picks a random action every step"),
+}
+# The strongest models from the generalisation experiment (results/gen_reflex), best first.
+FEATURED = {
+    "gen/N1_s2": ("Best model (DAgger + PPO)", "Best overall in the paper: trained on 1 city, seed 2"),
+    "gen/N64_s1": ("DAgger + PPO, 64 cities", "Trained on 64 generated cities, seed 1"),
+    "bc_ppo": ("DAgger + PPO, suburb map", "Trained on the single suburb map of the benchmark"),
+}
 
 
 def list_models() -> list[dict]:
-    """Everything that can be flown: trained runs (newest first) and the built-in policies."""
+    """Everything that can be flown: the best trained models, the planners and baselines,
+    then every other trained run in runs/ (newest first)."""
+    out = [{"name": n, "kind": "featured", "label": label, "desc": desc}
+           for n, (label, desc) in FEATURED.items() if (RUNS / n / "model.zip").exists()]
+    out += [{"name": n, "kind": "builtin", "label": BUILTIN_LABELS[n][0], "desc": BUILTIN_LABELS[n][1]}
+            for n in BUILTIN]
     runs = [d for d in RUNS.iterdir() if (d / "model.zip").exists()] if RUNS.exists() else []
     runs.sort(key=lambda d: (d / "model.zip").stat().st_mtime, reverse=True)
-    out = [{"name": d.name, "kind": "trained"} for d in runs]
-    return out + [{"name": n, "kind": "builtin"} for n in BUILTIN]
+    out += [{"name": d.name, "kind": "trained", "label": d.name} for d in runs if d.name not in FEATURED]
+    return out
 
 
 class Trainer:
