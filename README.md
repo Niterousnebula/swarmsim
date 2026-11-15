@@ -64,6 +64,21 @@ and is only reachable from your own computer. Training runs as a separate
 process, so the view stays live. `python main.py demo`, `train` and `test` are
 the same things without the page; `python main.py --help` lists them.
 
+## Replay website
+
+`replay/` is a separate, read-only website that plays back recorded flights: every
+model in Connaught Place, NSUT and three unseen test cities, on the same starts and
+goals so they can be compared. It has no server and no physics, so it can be hosted
+for free on Hugging Face (Static Space), GitHub Pages or Firebase Hosting and shared
+with a link.
+
+```bash
+python scripts/record_replays.py --episodes 5     # writes replay/data/ (10-20 minutes)
+cd replay && python -m http.server 8800           # try it at http://localhost:8800
+```
+
+Hosting steps are in [docs/REPLAY.md](docs/REPLAY.md).
+
 ## Quick start
 
 ```bash

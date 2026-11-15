@@ -38,3 +38,6 @@ tests/Video.mp4
 
 # Video build workspace (the finished video is copied to docs/)
 brag-output/
+
+# Replay website recordings (python scripts/record_replays.py; uploaded to the host, see docs/REPLAY.md)
+replay/data*/

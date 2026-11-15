@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>swarmsim replays</title>
+<meta name="description" content="Recorded drone-swarm flights from swarmsim: trained policies and A* planners flying through real and generated cities past an air-defence platform.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%234da3ff%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="view" tabindex="0" aria-label="3-D view of the city and the drones"></canvas>
+<canvas id="labels" aria-hidden="true"></canvas>
+
+<section class="panel card" id="pick-card" aria-label="What to watch">
+  <header>
+    <h1>swarmsim replays</h1>
+    <button id="btn-about" class="link" aria-expanded="false" aria-controls="about">About</button>
+  </header>
+  <p id="about" class="note" hidden>
+    Recorded flights from the swarmsim simulator. Eight quadcopters fly from their starts to their goals
+    while a defence platform fires at anything inside its range. Every model flies the same starts and
+    goals in each episode, so you can switch models and compare. Nothing is simulated in your browser:
+    these are replays of runs made with PyBullet, recorded ten times a second.
+  </p>
+  <label class="field">
+    <span>City</span>
+    <select id="city"></select>
+  </label>
+  <p class="note" id="city-desc"></p>
+  <label class="field">
+    <span>Model</span>
+    <select id="model"></select>
+  </label>
+  <p class="note" id="model-desc"></p>
+  <div class="field">
+    <span>Episode</span>
+    <div class="seg" id="episodes" role="group" aria-label="Episode"></div>
+  </div>
+</section>
+
+<section class="panel card" id="score-card" aria-label="Outcomes">
+  <header>
+    <h2>This episode</h2>
+    <span class="status" id="clock">0.0 s</span>
+  </header>
+  <dl class="tally">
+    <div><dt>Reached goal</dt><dd id="n-goal" class="goal">0</dd></div>
+    <div><dt>Hit by defence</dt><dd id="n-hit" class="hit">0</dd></div>
+    <div><dt>Crashed</dt><dd id="n-crash" class="crash">0</dd></div>
+    <div><dt>Timed out</dt><dd id="n-timeout">0</dd></div>
+  </dl>
+  <div class="field">
+    <span>Drones <small>(click one, or press 1 to 8)</small></span>
+    <div id="chips" class="chips"></div>
+  </div>
+  <p class="note" id="drone-info"></p>
+  <details id="compare-box">
+    <summary>All models in this city</summary>
+    <table id="compare" aria-label="Outcomes of every recorded flight in this city, by model"></table>
+    <p class="note">Drones over all recorded episodes in this city. The paper's figures come from many more episodes.</p>
+  </details>
+</section>
+
+<div class="panel transport" role="group" aria-label="Playback">
+  <button id="btn-play" class="primary" title="Play or pause (Space)">Pause</button>
+  <button id="btn-restart" title="Back to the start of the episode (R)">Restart</button>
+  <input id="scrub" type="range" min="0" max="1000" value="0" step="1" aria-label="Time in the episode">
+  <span id="time" class="status">0:00 / 0:00</span>
+  <div class="seg" id="speed" role="group" aria-label="Playback speed">
+    <button data-speed="0.5">½×</button><button data-speed="1" class="on">1×</button><button data-speed="2">2×</button><button data-speed="4">4×</button>
+  </div>
+  <span class="sep"></span>
+  <button id="btn-follow" title="Keep the camera on the selected drone (F)">Follow</button>
+  <button id="btn-home" title="Back to the overview (Home)">Reset view</button>
+  <label class="check" title="Play the next episode when this one ends"><input type="checkbox" id="auto" checked> Next episode</label>
+</div>
+
+<p class="hint">Drag to turn · right-drag to slide · wheel to zoom</p>
+
+<div id="loading" class="loading" role="status"><div><b>Loading</b><span id="loading-what"></span><div class="bar"><div id="loading-bar"></div></div></div></div>
+<div id="banner" class="banner" hidden></div>
+
+<script type="module" src="player.js"></script>
+</body>
+</html>
