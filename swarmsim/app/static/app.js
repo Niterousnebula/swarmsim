@@ -869,8 +869,14 @@ function fillCities() {
   if (!S.info) return;
   const sel = $('city'), sc = S.scene;
   const own = sc ? sc.model_city : null;
-  sel.replaceChildren(...S.info.cities.map((c) => new Option(
-    `${c.path === own ? 'This model’s map' : c.label} · ${c.size} m`, c.path)), new Option('New city…', NEW_CITY));
+  const groups = [['real', 'Real cities (OpenStreetMap)'], ['preset', 'Preset cities'], ['generated', 'Generated cities']];
+  const option = (c) => new Option(`${c.path === own ? 'This model’s map' : c.label} · ${Math.round(c.size)} m`, c.path);
+  sel.replaceChildren(...groups.map(([kind, title]) => {
+    const g = document.createElement('optgroup');
+    g.label = title;
+    g.append(...S.info.cities.filter((c) => (c.kind || 'preset') === kind).map(option));
+    return g;
+  }).filter((g) => g.children.length), new Option('New city…', NEW_CITY));
   if (S.form) sel.value = S.form.city;
   $('newcity').hidden = sel.value !== NEW_CITY;
 }

@@ -37,10 +37,13 @@ SIZES = (300, 500, 800)
 
 
 # ------------------------------------------------------------------- cities
+REAL_CITY_LABELS = {"delhi_cp": "Connaught Place, New Delhi", "nsut": "NSUT campus, Delhi"}
+
+
 def _label(d: Path) -> str:
     name = d.name
-    if d.parent.name == "cache":
-        return f"Training map {name.removeprefix('city_')[:4]}"
+    if name in REAL_CITY_LABELS:
+        return REAL_CITY_LABELS[name]
     if name.startswith("custom_"):
         style, pattern, size, seed = (name.split("_") + ["", "", "", ""])[1:5]
         return f"{STYLES.get(style, {}).get('label', style)}, {pattern} #{seed}"
@@ -48,7 +51,9 @@ def _label(d: Path) -> str:
 
 
 def list_cities() -> list[dict]:
-    out = []
+    """Real maps first, then the preset and custom cities in worlds/, then the cities generated
+    for training (cache/), numbered City 1, City 2, ... in the order they were built."""
+    out, generated = [], []
     for root in CITY_ROOTS:
         for scene in sorted(Path(root).glob("*/scene.json")):
             d = scene.parent
@@ -56,8 +61,17 @@ def list_cities() -> list[dict]:
                 m = json.loads(scene.read_text())
             except (OSError, ValueError):
                 continue
-            out.append({"path": d.as_posix(), "label": _label(d), "size": float(m.get("size", 0)),
-                        "buildings": int(m.get("counts", {}).get("buildings", 0))})
+            entry = {"path": d.as_posix(), "size": round(float(m.get("size", 0))),
+                     "buildings": int(m.get("counts", {}).get("buildings", 0))}
+            if root == "cache":
+                generated.append((scene.stat().st_mtime, d.name, entry))
+            else:
+                entry["kind"] = "real" if d.name in REAL_CITY_LABELS else "preset"
+                entry["label"] = _label(d)
+                out.append(entry)
+    out.sort(key=lambda e: e["kind"] != "real")
+    for i, (_, _, entry) in enumerate(sorted(generated, key=lambda g: (g[0], g[1])), 1):
+        out.append({**entry, "kind": "generated", "label": f"City {i}"})
     return out
 
 

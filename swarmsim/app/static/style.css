@@ -53,7 +53,8 @@ button.primary:hover:not(:disabled) { background: #74b8ff; }
 button.pilot-on { background: var(--pilot); border-color: var(--pilot); color: #201a00; font-weight: 600; }
 :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 select { width: 100%; }
-select option { color: #111; }
+select option { color: #111; font-weight: 400; }
+select optgroup { color: #4a5568; font-weight: 700; font-style: normal; background: #fff; }
 input:not([type]) { width: 100%; }
 
 .seg { display: inline-flex; }
