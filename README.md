@@ -19,6 +19,18 @@ extended on its own.
 
 The drones are the learning agents. The defence platform is scripted.
 
+## Live demo
+
+**[aryanneogi-swarmsim-replay.static.hf.space](https://aryanneogi-swarmsim-replay.static.hf.space)**
+
+Recorded flights you can watch in the browser, with nothing to install. Eight
+quadcopters cross Connaught Place, the NSUT campus and three generated cities never
+used in training, past an air-defence platform. Pick the model (the best trained
+model, the 64-city model, the threat-aware and threat-blind A* planners or the
+scripted baseline) and the episode. Every model flies the same starts and goals, so
+you can switch between them and compare. The page plays back recordings; it does
+not run the simulator. See [Replay website](#replay-website) below for how it is made.
+
 ## Screenshots
 
 | | |
@@ -77,6 +89,7 @@ python scripts/record_replays.py --episodes 5     # writes replay/data/ (10-20 m
 cd replay && python -m http.server 8800           # try it at http://localhost:8800
 ```
 
+The live copy is hosted as a Hugging Face Static Space (see [Live demo](#live-demo)).
 Hosting steps are in [docs/REPLAY.md](docs/REPLAY.md).
 
 ## Quick start
